@@ -1,0 +1,40 @@
+---
+- name: Converge DNS Server
+  hosts: dns-server
+  tasks:
+    - name: Include dnsmasq role
+      ansible.builtin.include_role:
+        name: AElQazouiInsights.dnsmasq
+      vars:
+        dnsmasq_interface: eth0
+        dnsmasq_listen_address: 10.0.1.1
+        dnsmasq_domain_name: test.local
+        dnsmasq_upstream_dns_servers:
+          - 8.8.8.8
+          - 8.8.4.4
+
+- name: Configure DNS Client
+  hosts: dns-client
+  tasks:
+    - name: Install required packages
+      ansible.builtin.package:
+        name: 
+          - dnsutils
+          - iputils-ping
+          - net-tools
+        state: present
+        update_cache: true
+
+    - name: Configure DNS resolver
+      ansible.builtin.template:
+        src: resolved.conf.j2
+        dest: /etc/systemd/resolved.conf
+        mode: '0644'
+      vars:
+        dnsmasq_resolved_dns: "10.0.1.1"
+        dnsmasq_resolved_domains: "test.local"
+
+    - name: Restart systemd-resolved
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: restarted

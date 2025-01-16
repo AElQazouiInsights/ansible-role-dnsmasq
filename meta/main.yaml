@@ -1,0 +1,24 @@
+---
+galaxy_info:
+  role_name: dnsmasq
+  namespace: AElQazouiInsights
+  author: AElQazouiInsights
+  description: DNS/DHCP server setup role for Raspberry Pi clusters using dnsmasq
+
+  license: license (MIT)
+
+  min_ansible_version: "2.11"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - focal
+
+  galaxy_tags:
+    - system
+    - dhcp
+    - dns
+    - dnsmasq
+
+dependencies: []
