@@ -10,7 +10,7 @@ name: CI
 
 defaults:
   run:
-    working-directory: 'AElQazouiInsights.dnsmasq'
+    working-directory: 'aelqazouiinsights.dnsmasq'
 
 jobs:
 
@@ -21,7 +21,7 @@ jobs:
       - name: Check out the codebase.
         uses: actions/checkout@v4
         with:
-          path: 'AElQazouiInsights.dnsmasq'
+          path: 'aelqazouiinsights.dnsmasq'
 
       - name: Set up Python 3.
         uses: actions/setup-python@v5
@@ -52,7 +52,7 @@ jobs:
       - name: Check out the codebase.
         uses: actions/checkout@v4
         with:
-          path: 'AElQazouiInsights.dnsmasq'
+          path: 'aelqazouiinsights.dnsmasq'
 
       - name: Set up Python 3.
         uses: actions/setup-python@v5

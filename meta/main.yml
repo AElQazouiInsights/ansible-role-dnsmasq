@@ -1,11 +1,12 @@
 ---
 galaxy_info:
   role_name: dnsmasq
-  namespace: AElQazouiInsights
+  namespace: aelqazouiinsights  # Lowercase version of your namespace
   author: AElQazouiInsights
   description: DNS/DHCP server setup role for Raspberry Pi clusters using dnsmasq
+  company: AElQazouiInsights
 
-  license: license (MIT)
+  license: MIT
 
   min_ansible_version: "2.11"
 
