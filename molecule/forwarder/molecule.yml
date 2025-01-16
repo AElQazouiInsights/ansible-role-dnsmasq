@@ -1,0 +1,51 @@
+---
+dependency:
+  name: galaxy
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+driver:
+  name: docker
+platforms:
+  - name: dns-server
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+    docker_networks:
+      - name: molecule_dns_net
+        ipam_config:
+          - subnet: "10.0.1.0/24"
+            gateway: "10.0.1.254"
+    networks:
+      - name: "molecule_dns_net"
+        ipv4_address: 10.0.1.1
+
+  - name: dns-client
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+    docker_networks:
+      - name: molecule_dns_net
+    networks:
+      - name: "molecule_dns_net"
+        ipv4_address: 10.0.1.2
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      dns-server:
+        ansible_user: ansible
+      dns-client:
+        ansible_user: ansible
+verifier:
+  name: ansible

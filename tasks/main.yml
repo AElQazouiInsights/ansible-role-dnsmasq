@@ -1,0 +1,75 @@
+---
+- name: Check internet connectivity
+  ansible.builtin.command: ping -c 1 google.com
+  register: internet_check
+  ignore_errors: yes
+  changed_when: false
+  tags: ['check']
+
+- name: Check if port 53 is already in use
+  ansible.builtin.shell: netstat -tuln | grep ":53 "
+  register: port_53_check
+  ignore_errors: yes
+  changed_when: false
+  tags: ['check']
+
+- name: Ensure dnsmasq package is installed
+  ansible.builtin.package:
+    name: '{{ dnsmasq_package_list | list }}'
+    state: 'present'
+    update_cache: true
+  register: pkg_install_result
+  until: pkg_install_result is success
+  tags: ['install']
+
+- name: Stop and disable systemd-resolved if configured
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+  when: dnsmasq_stop_resolved | bool
+  tags: ['config']
+
+- name: Create dnsmasq configuration directory
+  ansible.builtin.file:
+    path: "{{ dnsmasq_conf_directory }}"
+    state: directory
+    mode: '0755'
+  tags: ['config']
+
+- name: Configure dnsmasq
+  ansible.builtin.template:
+    src: "{{ dnsmasq_conf_template }}"
+    dest: "{{ dnsmasq_conf_directory }}/{{ dnsmasq_conf_file }}"
+    mode: '0644'
+  notify: Restart dnsmasq
+  tags: ['config']
+
+- name: Configure systemd-resolved
+  ansible.builtin.template:
+    src: resolved.conf.j2
+    dest: /etc/systemd/resolved.conf
+    mode: '0644'
+  when: dnsmasq_resolved_conf | bool
+  notify: Restart systemd-resolved
+  tags: ['config']
+
+- name: Configure logrotate for dnsmasq
+  ansible.builtin.template:
+    src: dnsmasq-logrotate.j2
+    dest: /etc/logrotate.d/dnsmasq
+    mode: '0644'
+  when: dnsmasq_enable_logging | bool
+  tags: ['config']
+
+- name: Ensure dnsmasq service is running and enabled
+  ansible.builtin.systemd:
+    name: "{{ dnsmasq_service_name }}"
+    state: started
+    enabled: yes
+  tags: ['service']
+
+- name: Display service status
+  ansible.builtin.debug:
+    msg: "Dnsmasq is configured and running on {{ dnsmasq_interface }} ({{ dnsmasq_listen_address }})"
+  tags: ['debug']

@@ -1,0 +1,87 @@
+# Interface Configuration
+interface={{ dnsmasq_interface }}                  # DHCP will operate over the eth0 adapter
+except-interface=lo                                # Don't listen on loopback
+listen-address={{ dnsmasq_listen_address }}        # The static IP address we're listening on
+bind-interfaces                                    # Bind dnsmasq to the interfaces it's listening on
+
+# DNS Configuration
+{% for server in dnsmasq_upstream_dns_servers %}
+server={{ server }}                                # DNS nameservers
+{% endfor %}
+domain-needed                                      # Never forward plain names (without a dot or domain part)
+bogus-priv                                        # Never forward addresses in the non-routed address spaces
+local=/{{ dnsmasq_domain_name }}/                 # Local domain setting
+domain={{ dnsmasq_domain_name }}                  # Domain name
+
+# DHCP Configuration
+# DHCP will allocate IPs for 12-hour leases, but will always assign the same IPs
+# to the same devices based on their MAC addresses
+dhcp-range={{ dnsmasq_dhcp_range }},12h          # DHCP range and lease time
+
+{% if dnsmasq_discover_inventory %}
+# Pre-allocated DHCP configurations for each device in our inventory
+# Static MAC-based assignments for reliable devices
+{% for host in groups['all'] %}
+{% if hostvars[host].mac is defined and hostvars[host].ip is defined %}
+{% if hostvars[host].hostname is defined %}
+# {{ hostvars[host].hostname }}
+{% endif %}
+dhcp-host={{ hostvars[host].mac }},{{ hostvars[host].ip }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if dnsmasq_additional_dhcp_hosts.values() %}
+# Additional DHCP hosts configurations
+{% for host in dnsmasq_additional_dhcp_hosts.values() %}
+{% if host.desc is defined %}
+# {{ host.desc }}
+{% endif %}
+{% if host.mac is defined and host.ip is defined %}
+dhcp-host={{ host.mac }},{{ host.ip }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if dnsmasq_discover_inventory %}
+# DNS records from inventory
+# Hostname to IP mappings for our devices
+{% for host in groups['all'] %}
+{% if hostvars[host].hostname is defined and hostvars[host].ip is defined %}
+host-record={{ hostvars[host].hostname }}.{{ dnsmasq_domain_name }},{{ hostvars[host].ip }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if dnsmasq_additional_dns_hosts.values() %}
+# Additional DNS entries for specific services
+{% for host in dnsmasq_additional_dns_hosts.values() %}
+{% if host.desc is defined %}
+# {{ host.desc }}
+{% endif %}
+{% if host.hostname is defined and host.ip is defined %}
+host-record={{ host.hostname }}.{{dnsmasq_domain_name }},{{ host.ip }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if dnsmasq_enable_tftp is defined and dnsmasq_enable_tftp %}
+# TFTP Configuration
+enable-tftp                                       # Enable dnsmasq's built-in TFTP server
+{% if dnsmasq_tftp_root is defined %}
+tftp-root={{ dnsmasq_tftp_root }}                # TFTP root directory
+{% endif %}
+{% endif %}
+
+# Logging Configuration
+{% if dnsmasq_log_queries | default(false) %}
+log-queries                                       # Log DNS queries
+{% endif %}
+{% if dnsmasq_log_dhcp | default(false) %}
+log-dhcp                                          # Log DHCP transactions
+{% endif %}
+
+{% if dnsmasq_additional_conf is defined %}
+# Additional custom configuration
+{{ dnsmasq_additional_conf }}
+{% endif %}

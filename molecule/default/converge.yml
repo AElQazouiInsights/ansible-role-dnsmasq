@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include dnsmasq role
+      ansible.builtin.include_role:
+        name: AElQazouiInsights.dnsmasq
+      vars:
+        dnsmasq_discover_inventory: true
+        dnsmasq_domain_name: test.local
+        dnsmasq_upstream_dns_servers:
+          - 8.8.8.8
+          - 8.8.4.4
+        dnsmasq_dhcp_range: '10.0.0.32,10.0.0.128,12h'

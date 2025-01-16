@@ -1,0 +1,13 @@
+/var/log/dnsmasq.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 640 dnsmasq root
+    sharedscripts
+    postrotate
+        [ -f /var/run/dnsmasq/dnsmasq.pid ] && kill -USR2 $(cat /var/run/dnsmasq/dnsmasq.pid)
+    endscript
+}
